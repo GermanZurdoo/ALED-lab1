@@ -56,9 +56,13 @@ public class EEGModel {
 	 * @param measurements The Measurements that make up the EEGModel.
 	 */
 	public EEGModel(Measurement[] measurements) {
-		// TODO
+		    this.measurements = new ArrayList<Measurement>();
+		    for (int i = 0; i < measurements.length; i++) {
+		        this.measurements.add(measurements[i]);
+		    }
+		}
 		
-	}
+	
 
 	/**
 	 * Adds a Measurement to the end of the EEGModel. If the GUI is running, the new
@@ -89,9 +93,8 @@ public class EEGModel {
 	 * @return The new EEGModel.
 	 */
 	public EEGModel filter(Filter filter) {
-		// TODO
+		return filter.applyFilter(this);
 		
-		return null;
 	}
 
 	/**
@@ -129,10 +132,30 @@ public class EEGModel {
 	 * @param fileName Path to the OpenBCI file to be created.
 	 * @throws IOException Thrown if the file can't be written.
 	 */
-	public void saveFile(String fileName) throws IOException {
-		// TODO
+	public void saveFile(String fileName)  {
+		try {File archivo = new File(fileName);
+        FileOutputStream fos = new FileOutputStream(archivo);
+        PrintStream ps = new PrintStream(fos);
+        
+        for (int i = 0; i < measurements.size(); i++) {
+            
+            Measurement muestraActual = measurements.get(i);
+            ps.print((i % 256));
+            
+            for (int j = 0; j < muestraActual.numChannels(); j++) {
+            	ps.print(", " + muestraActual.getChannel(j));
+            }
+            ps.println();
+            }
+        ps.close();
+		}
+		catch(Exception e){
+			System.out.println("Error al guardar el archivo: " + e.getMessage());
+	        e.printStackTrace();
+	    }
+		}
 		
-	}
+	
 
 	/**
 	 * Plots the data of the EEGModel using the classes in the es.upm.aled.lab1.gui
@@ -248,13 +271,18 @@ public class EEGModel {
 	public static void main(String[] args) {
 		if (args.length > 0) {
 			EEGModel eeg = new EEGModel(args[0]);
+			int[] canalesDeseados = {1, 2, 3};
+	        Filter filtroCanales = new FilterExtractChannels(canalesDeseados);
+	        Filter filtroTiempo = new FilterExtractPeriod(2750, 5750);
+	        EEGModel eegFiltrado = eeg.filter(filtroCanales).filter(filtroTiempo);
 			eeg.plotData();
-			// TODO
+				
 			
 		} else {
 			EEGModel eeg = new EEGModel();
 			eeg.createSyntheticData(1000);
-			// TODO
+			eeg.saveFile("Synthetic.txt");
+	        eeg.plotData();
 			
 		}
 	}
